@@ -1,0 +1,50 @@
+name: Build and test a .NET solution
+
+on:
+  workflow_call:
+    inputs:
+        dotnet-version:
+            description: 'The version of .NET'
+            required: true
+            type: string
+
+        configuration:
+            description: 'The configuration to build and test'
+            required: true
+            type: string
+            default: 'Release'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # Important for GitVersion
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: ${{ inputs.dotnet-version }}
+
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration ${{ inputs.configuration }} --no-restore
+
+      - name: Test
+        run: dotnet test --no-restore --verbosity minimal --collect:"XPlat Code Coverage"
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/**/*.xml'
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          fail_ci_if_error: false
