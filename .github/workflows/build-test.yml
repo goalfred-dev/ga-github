@@ -10,7 +10,7 @@ on:
 
         configuration:
             description: 'The configuration to build and test'
-            required: true
+            required: false
             type: string
             default: 'Release'
 
